@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4e89">
+  <meta name="description" content="北海道自由行 300 個實戰日語單字：單字卡、列表、聽力小測驗">
+  <title>北海道旅遊日語 300</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-row">
+      <h1 class="brand">❄️ <span lang="ja" class="jp">北海道</span> 旅遊日語 300</h1>
+      <button id="cheatBtn" class="icon-btn cheat-btn" type="button" aria-label="50 音濁音速查表">
+        <span lang="ja" class="jp">が゜</span> 速查
+      </button>
+    </div>
+    <div class="progress" aria-live="polite">
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-text" id="progressText">已熟記 0 / 300</span>
+    </div>
+    <div class="topbar-row controls">
+      <div class="seg" role="group" aria-label="語速">
+        <button type="button" data-rate="0.7">🐢 0.7x</button>
+        <button type="button" data-rate="1">1.0x</button>
+      </div>
+      <button id="shuffleBtn" class="toggle-btn" type="button" aria-pressed="false">🔀 隨機亂序</button>
+    </div>
+  </header>
+
+  <div id="ttsNotice" class="notice" role="status" hidden></div>
+
+  <nav class="chip-row cats" id="catBar" aria-label="分類篩選"></nav>
+
+  <section class="filters">
+    <input id="search" class="search" type="search" placeholder="🔍 搜尋 假名／漢字／romaji／中文" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+    <div class="chip-row status" id="statusBar" aria-label="狀態篩選"></div>
+  </section>
+
+  <main>
+    <!-- 模式 A：單字卡 -->
+    <section id="view-card" class="view" aria-label="單字卡模式">
+      <div class="chip-row toggles">
+        <label class="switch"><input type="checkbox" id="optKanji"><span>漢字提示</span></label>
+        <label class="switch"><input type="checkbox" id="optRomaji"><span>羅馬拼音</span></label>
+        <label class="switch"><input type="checkbox" id="optAuto"><span>🔈 自動發音</span></label>
+      </div>
+
+      <div class="card-stage" id="cardStage">
+        <div class="card-drag" id="cardDrag">
+          <div class="card" id="card" tabindex="0" role="button" aria-label="點擊翻面">
+            <div class="face front" id="cardFront"></div>
+            <div class="face back" id="cardBack"></div>
+          </div>
+        </div>
+        <div class="empty" id="cardEmpty" hidden></div>
+      </div>
+
+      <div class="card-meta">
+        <span id="cardCount"></span>
+        <span class="muted">點卡片翻面・左右滑動換卡</span>
+      </div>
+
+      <div class="card-actions">
+        <button type="button" id="btnPrev" class="act">‹ 上一張</button>
+        <button type="button" id="btnAgain" class="act again">🔁 再練習</button>
+        <button type="button" id="btnKnow" class="act know">✅ 已熟記</button>
+        <button type="button" id="btnNext" class="act">下一張 ›</button>
+      </div>
+    </section>
+
+    <!-- 模式 B：列表 -->
+    <section id="view-list" class="view" aria-label="列表瀏覽模式" hidden>
+      <div class="list-head">
+        <span id="listCount" class="muted"></span>
+        <label class="switch"><input type="checkbox" id="optBlind"><span>🙈 遮罩測驗</span></label>
+      </div>
+      <ul id="wordList" class="word-list"></ul>
+    </section>
+
+    <!-- 模式 C：小測驗 -->
+    <section id="view-quiz" class="view" aria-label="小測驗模式" hidden>
+      <div class="list-head">
+        <span id="quizScore" class="muted">答對 0 / 0</span>
+        <label class="switch"><input type="checkbox" id="optListen"><span>🎧 純聽力盲測</span></label>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-prompt jp" lang="ja" id="quizPrompt"></div>
+        <button type="button" class="speak-big" id="quizPlay" aria-label="再聽一次">🔊</button>
+      </div>
+      <div class="quiz-options" id="quizOptions"></div>
+      <div class="quiz-feedback" id="quizFeedback" hidden></div>
+      <button type="button" class="primary-btn" id="quizNext" hidden>下一題 ›</button>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <button type="button" id="resetBtn" class="link-btn">重置學習進度</button>
+    <p class="muted">進度只儲存在這台裝置的瀏覽器中</p>
+  </footer>
+
+  <nav class="tabbar" aria-label="學習模式">
+    <button type="button" data-mode="card" aria-selected="true"><span class="tab-ico">🃏</span>單字卡</button>
+    <button type="button" data-mode="list" aria-selected="false"><span class="tab-ico">📋</span>列表</button>
+    <button type="button" data-mode="quiz" aria-selected="false"><span class="tab-ico">🎯</span>小測驗</button>
+  </nav>
+
+  <!-- 50 音濁音與特殊符號速查 -->
+  <dialog id="cheatDialog" class="sheet" aria-labelledby="cheatTitle">
+    <div class="sheet-head">
+      <h2 id="cheatTitle">濁音・特殊符號速查</h2>
+      <button type="button" class="icon-btn" id="cheatClose" aria-label="關閉">✕</button>
+    </div>
+    <div class="sheet-body">
+      <h3>濁音 ゛／半濁音 ゜</h3>
+      <div class="table-wrap">
+        <table class="kana-table" lang="ja">
+          <thead><tr><th>變化</th><th>平假名</th><th>片假名</th></tr></thead>
+          <tbody>
+            <tr><th>K → G</th><td>か→<b>が ぎ ぐ げ ご</b></td><td><b>ガ ギ グ ゲ ゴ</b></td></tr>
+            <tr><th>S → Z</th><td>さ→<b>ざ じ ず ぜ ぞ</b></td><td><b>ザ ジ ズ ゼ ゾ</b></td></tr>
+            <tr><th>T → D</th><td>た→<b>だ ぢ づ で ど</b></td><td><b>ダ ヂ ヅ デ ド</b></td></tr>
+            <tr><th>H → B</th><td>は→<b>ば び ぶ べ ぼ</b></td><td><b>バ ビ ブ ベ ボ</b></td></tr>
+            <tr><th>H → P</th><td>は→<b class="p">ぱ ぴ ぷ ぺ ぽ</b></td><td><b class="p">パ ピ プ ペ ポ</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tip">💡 じ（ji）≈ ぢ、ず（zu）≈ づ，發音相同，日常多用 じ・ず。</p>
+
+      <h3>特殊符號</h3>
+      <ul class="sym-list">
+        <li><span class="sym m-long jp">ー</span><div><b>長音</b>：前一個音拉長一拍<br><span class="jp" lang="ja">ラーメン</span> raa-men・<span class="jp" lang="ja">コーヒー</span> koo-hii</div></li>
+        <li><span class="sym m-soku jp">っ ッ</span><div><b>促音</b>：小字 っ 停頓空一拍，下一個子音重複<br><span class="jp" lang="ja">きっぷ</span> kip-pu・<span class="jp" lang="ja">ほっけ</span> hok-ke</div></li>
+        <li><span class="sym m-you jp">ゃ ゅ ょ</span><div><b>拗音</b>：小字與前一字合成一拍<br><span class="jp" lang="ja">きょう</span> kyou・<span class="jp" lang="ja">しゃぶしゃぶ</span> sha-bu</div></li>
+        <li><span class="sym m-you jp">ァ ォ</span><div><b>片假名小母音</b>：外來語合音<br><span class="jp" lang="ja">フォーク</span> fo-o-ku・<span class="jp" lang="ja">チェック</span> che-k-ku</div></li>
+      </ul>
+
+      <h3>卡片背面顏色標示</h3>
+      <p class="legend jp" lang="ja">
+        <span class="m-daku">濁音 が</span>
+        <span class="m-han">半濁音 ぱ</span>
+        <span class="m-soku">促音 っ</span>
+        <span class="m-you">拗音 ゃ</span>
+        <span class="m-long">長音 ー</span>
+      </p>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
